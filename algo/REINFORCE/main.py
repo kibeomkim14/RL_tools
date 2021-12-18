@@ -1,5 +1,5 @@
 import gym
-from REINFORCE import PolicyNetwork
+from utils.networks import MLP
 from REINFORCE import REINFORCE
 
 
@@ -16,7 +16,7 @@ GAMMA = 0.99
 def main():
     # set up the environment and agent
     env = gym.make('CartPole-v0')
-    agent = REINFORCE(env, PolicyNetwork, LEARNING_RATE, GAMMA)
+    agent = REINFORCE(env, MLP, LEARNING_RATE, GAMMA)
 
     for episode in range(NUM_EPISODES):
         # reset state
