@@ -1,6 +1,6 @@
 import gym
-from utils.networks import MLP
-from REINFORCE import REINFORCE
+from algo.REINFORCE.networks import MLP
+from model import REINFORCE
 
 
 ###############################################
