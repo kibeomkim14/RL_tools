@@ -19,8 +19,9 @@ class A2C(nn.Module):
         self.actor   = Net(self.dim_in, self.dim_out)
 
         self.gamma  = disc_rate
-        self.buffer = ExpReplay()
-        self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
+        self.buffer = ExpReplay(10000)
+        self.actor_optimizer  = optim.Adam(self.actor.parameters() , lr=learning_rate)
+        self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
     def act(self, state):
         # Here, we assumes the action space is discrete with a limited dimension.
@@ -43,23 +44,22 @@ class A2C(nn.Module):
 
     def train(self):
         # calculate return of all times in the episode
-        reward_list = self.buffer.rewards
-        T = len(reward_list)
-        returns = np.empty(T, dtype=np.float32)
-        future_return = 0.0
-
-        # calculate returns recursively
-        for t in reversed(range(T)):
-            future_return = reward_list[t] + gamma * future_return
-            returns[t] = future_return
+        rewards     = torch.stack(self.buffer.rewards)
+        next_states = torch.stack(self.buffer.next_states)
+        states      = torch.stack(self.buffer.states)
+        log_probs   = torch.stack(self.buffer.logprobs)
 
         # calculate loss of policy
-        returns = torch.tensor(returns)
-        log_probs = torch.stack(self.buffer.logprobs)
-        critic_loss = - log_probs * returns
-        critic_loss = torch.sum(loss)
+        advantage = rewards + self.gamma * (1 - self.buffer.dones) * self.QNet(next_states) - self.QNet(states)
+        actor_loss  = - log_probs * advantage.detach()
+        actor_loss  = torch.sum(actor_loss)
+        critic_loss = advantage.pow(2)
 
         # do gradient ascent
         self.optimizer.zero_grad()
         critic_loss.backward()
         self.optimizer.step()
+
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()

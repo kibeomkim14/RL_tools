@@ -2,7 +2,7 @@ from collections import namedtuple, deque
 import random
 
 
-PolicyTransition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'dones'))
+PolicyTransition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
 
 
 class ExpReplay:
