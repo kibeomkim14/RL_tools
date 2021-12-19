@@ -3,15 +3,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from utils.buffer import ExpReplay
-
+from collections import namedtuple
 from torch.distributions import Categorical
 
-gamma = 0.99  # discount rate
 
-
-class A2C(nn.Module):
-    def __init__(self, env, Net, learning_rate, disc_rate):
-        super(A2C, self).__init__()
+class AC(nn.Module):
+    def __init__(self, env, Net, learning_rate, disc_rate, batch_size):
+        super(AC, self).__init__()
 
         self.dim_in  = env.observation_space.shape[0]
         self.dim_out = env.action_space.n
@@ -20,6 +18,7 @@ class A2C(nn.Module):
 
         self.gamma  = disc_rate
         self.buffer = ExpReplay(10000)
+        self.batch_size = batch_size
         self.actor_optimizer  = optim.Adam(self.actor.parameters() , lr=learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
@@ -44,21 +43,31 @@ class A2C(nn.Module):
 
     def train(self):
         # calculate return of all times in the episode
-        rewards     = torch.stack(self.buffer.rewards)
-        next_states = torch.stack(self.buffer.next_states)
-        states      = torch.stack(self.buffer.states)
-        log_probs   = torch.stack(self.buffer.logprobs)
+        if self.buffer.__len__() < self.batch_size:
+            return
+
+        Transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
+        transitions = self.buffer.sample(self.batch_size)
+        batch = Transition(*zip(*transitions))
+
+        states   = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
+        rewards  = torch.tensor(batch.reward).view(self.batch_size,1)
+        dones    = torch.tensor(batch.dones).view(self.batch_size,1).long()
+        logprobs = torch.tensor(batch.logprobs, requires_grad=True).view(self.batch_size,1)
+        next_states = torch.tensor(batch.next_state).view(self.batch_size, self.dim_in)
 
         # calculate loss of policy
-        advantage = rewards + self.gamma * (1 - self.buffer.dones) * self.QNet(next_states) - self.QNet(states)
-        actor_loss  = - log_probs * advantage.detach()
+        # Below advantage function is the TD estimate.
+        advantage   = rewards + self.gamma * (1 - dones)* self.critic(next_states) - self.critic(states)
+        critic_loss = advantage.pow(2).sum()
+        actor_loss  = - logprobs * advantage.detach()
         actor_loss  = torch.sum(actor_loss)
-        critic_loss = advantage.pow(2)
+
 
         # do gradient ascent
-        self.optimizer.zero_grad()
+        self.critic_optimizer.zero_grad()
         critic_loss.backward()
-        self.optimizer.step()
+        self.critic_optimizer.step()
 
         self.actor_optimizer.zero_grad()
         actor_loss.backward()

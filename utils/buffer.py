@@ -7,7 +7,7 @@ PolicyTransition = namedtuple('Transition', ('state', 'action', 'logprobs', 'rew
 
 class ExpReplay:
     def __init__(self, capacity):
-        self.memory = deque([],maxlen=capacity)
+        self.memory = deque([], maxlen=capacity)
 
     def __len__(self):
         return len(self.memory)
