@@ -7,18 +7,19 @@ import pyglet
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES = 200
+NUM_EPISODES = 2000
 NUM_TIMESTEP = 200
-LEARNING_RATE = 0.001
-BATCH_SIZE = 10
-GAMMA = 0.99
+LEARNING_RATE = 1e-3
+BATCH_SIZE = 100
+GAMMA = 0.90
 
 
 def main():
     # set up the environment and agent
-    env = gym.make('CartPole-v0')
-    agent = AC(env, MLP, LEARNING_RATE, GAMMA,BATCH_SIZE)
+    env = gym.make('MountainCar-v0')
+    agent = AC(env, MLP, LEARNING_RATE, GAMMA, BATCH_SIZE)
     agent.reset()
+
     for episode in range(NUM_EPISODES):
         # reset state
         state = env.reset()

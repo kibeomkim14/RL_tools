@@ -3,22 +3,19 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from utils.buffer import ExpReplay
-
+from collections import namedtuple
 from torch.distributions import Categorical
+from utils.Algorithm import Algorithm
 
-gamma = 0.99  # discount rate
 
-
-class REINFORCE(nn.Module):
+class REINFORCE(Algorithm):
     def __init__(self, env, Net, learning_rate, disc_rate):
-        super(REINFORCE, self).__init__()
-
         self.dim_in  = env.observation_space.shape[0]
         self.dim_out = env.action_space.n
         self.policy  = Net(self.dim_in, self.dim_out)
-
-        self.gamma  = disc_rate
-        self.buffer = ExpReplay()
+        self.gamma   = disc_rate
+        self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'dones'))
+        self.buffer = ExpReplay(10000, self.transition)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
 
     def reset(self):
@@ -33,31 +30,27 @@ class REINFORCE(nn.Module):
         log_prob = dist.log_prob(action)  # log_prob of pi(a|s)
         return action.item(), log_prob
 
-    def store(self, state_tuple):
-        """
-        stores the output of environment and agents into agents experience buffer.
-
-        :param state_tuple:
-        :return:
-        """
-        self.buffer.store(state_tuple)
+    def store(self, *args):
+        self.buffer.store(*args)
 
     def train(self):
+        transitions = self.buffer.sample(self.buffer.__len__())
+        batch = self.transition(*zip(*transitions))
+        reward_list = batch.reward
 
         # calculate return of all times in the episode
-        reward_list = self.buffer.rewards
         T = len(reward_list)
         returns = np.empty(T, dtype=np.float32)
         future_return = 0.0
 
         # calculate returns recursively
         for t in reversed(range(T)):
-            future_return = reward_list[t] + gamma * future_return
+            future_return = reward_list[t] + self.gamma * future_return
             returns[t] = future_return
 
         # calculate loss of policy
         returns = torch.tensor(returns)
-        log_probs = torch.stack(self.buffer.logprobs)
+        log_probs = torch.stack(batch.logprobs)
         loss = - log_probs * returns
         loss = torch.sum(loss)
 

@@ -7,9 +7,9 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(dim_in, 64),
+            nn.Linear(dim_in, 20),
             nn.ReLU(),
-            nn.Linear(64, dim_out),
+            nn.Linear(20, dim_out),
             nn.Softmax(dim=0)
         )
 

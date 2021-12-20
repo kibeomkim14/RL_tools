@@ -5,21 +5,31 @@ import torch.optim as optim
 from utils.buffer import ExpReplay
 from collections import namedtuple
 from torch.distributions import Categorical
+from utils.Algorithm import Algorithm
 
 
-class AC(nn.Module):
+class AC(Algorithm):
     def __init__(self, env, Net, learning_rate, disc_rate, batch_size):
-        super(AC, self).__init__()
-
-        self.dim_in  = env.observation_space.shape[0]
+        """
+        This class implements Actor-Critic algorithm where one uses two
+        deep neural networks, Actor & Critic.
+        :param env: openai gym environment.
+        :param Net: neural network class from pytorch module.
+        :param learning_rate: learning rate of optimizer.
+        :param disc_rate: discount rate used to calculate return G.
+        :param batch_size: specified batch size for training.
+        """
+        self.dim_in = env.observation_space.shape[0]
         self.dim_out = env.action_space.n
-        self.critic  = Net(self.dim_in, 1)
-        self.actor   = Net(self.dim_in, self.dim_out)
+        self.critic = Net(self.dim_in, 1)
+        self.actor = Net(self.dim_in, self.dim_out)
 
-        self.gamma  = disc_rate
-        self.buffer = ExpReplay(10000)
+        self.gamma = disc_rate
         self.batch_size = batch_size
-        self.actor_optimizer  = optim.Adam(self.actor.parameters() , lr=learning_rate)
+        self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
+
+        self.buffer = ExpReplay(10000, self.transition)
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
     def act(self, state):
@@ -46,23 +56,21 @@ class AC(nn.Module):
         if self.buffer.__len__() < self.batch_size:
             return
 
-        Transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
         transitions = self.buffer.sample(self.batch_size)
-        batch = Transition(*zip(*transitions))
+        batch = self.transition(*zip(*transitions))
 
-        states   = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
-        rewards  = torch.tensor(batch.reward).view(self.batch_size,1)
-        dones    = torch.tensor(batch.dones).view(self.batch_size,1).long()
-        logprobs = torch.tensor(batch.logprobs, requires_grad=True).view(self.batch_size,1)
+        states = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
+        rewards = torch.tensor(batch.reward).view(self.batch_size, 1)
+        dones = torch.tensor(batch.dones).view(self.batch_size, 1).long()
+        logprobs = torch.tensor(batch.logprobs, requires_grad=True).view(self.batch_size, 1)
         next_states = torch.tensor(batch.next_state).view(self.batch_size, self.dim_in)
 
         # calculate loss of policy
         # Below advantage function is the TD estimate.
-        advantage   = rewards + self.gamma * (1 - dones)* self.critic(next_states) - self.critic(states)
+        advantage = rewards + self.gamma * (1 - dones) * self.critic(next_states) - self.critic(states)
         critic_loss = advantage.pow(2).sum()
-        actor_loss  = - logprobs * advantage.detach()
-        actor_loss  = torch.sum(actor_loss)
-
+        actor_loss = - logprobs * advantage.detach()
+        actor_loss = torch.sum(actor_loss)
 
         # do gradient ascent
         self.critic_optimizer.zero_grad()
