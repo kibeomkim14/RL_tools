@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Algorithm(metaclass= ABCMeta):
+class Algorithm(metaclass=ABCMeta):
     """
     Constructs an abstract based class Algorithm.
     This will be the main bone of all Reinforcement learning algorithms
