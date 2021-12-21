@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from utils.buffer import ExpReplay
 from collections import namedtuple
@@ -9,9 +8,9 @@ from utils.Algorithm import Algorithm
 
 
 class AC(Algorithm):
-    def __init__(self, env, Net, learning_rate, disc_rate, batch_size):
+    def __init__(self, env, Net, learning_rate, disc_rate):
         """
-        This class implements Actor-Critic algorithm where one uses two
+        This class implements 1-step Actor-Critic algorithm where one uses two
         deep neural networks, Actor & Critic.
         :param env: openai gym environment.
         :param Net: neural network class from pytorch module.
@@ -25,7 +24,6 @@ class AC(Algorithm):
         self.actor = Net(self.dim_in, self.dim_out)
 
         self.gamma = disc_rate
-        self.batch_size = batch_size
         self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
 
         self.buffer = ExpReplay(10000, self.transition)
@@ -53,21 +51,18 @@ class AC(Algorithm):
 
     def train(self):
         # calculate return of all times in the episode
-        if self.buffer.__len__() < self.batch_size:
-            return
-
-        transitions = self.buffer.sample(self.batch_size)
+        transitions = self.buffer.sample(self.buffer.len())
         batch = self.transition(*zip(*transitions))
 
-        states = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
-        rewards = torch.tensor(batch.reward).view(self.batch_size, 1)
-        dones = torch.tensor(batch.dones).view(self.batch_size, 1).long()
-        logprobs = torch.tensor(batch.logprobs, requires_grad=True).view(self.batch_size, 1)
-        next_states = torch.tensor(batch.next_state).view(self.batch_size, self.dim_in)
+        states = torch.tensor(batch.state).view(self.buffer.len(), self.dim_in)
+        rewards = torch.tensor(batch.reward).view(self.buffer.len(), 1)
+        dones = torch.tensor(batch.dones).view(self.buffer.len(), 1).long()
+        logprobs = torch.tensor(batch.logprobs, requires_grad=True).view(self.buffer.len(), 1)
+        next_states = torch.tensor(batch.next_state).view(self.buffer.len(), self.dim_in)
 
         # calculate loss of policy
-        # Below advantage function is the TD estimate.
-        advantage = rewards + self.gamma * (1 - dones) * self.critic(next_states) - self.critic(states)
+        # Below advantage function is the TD estimate of Q(s,a).
+        advantage = rewards + self.gamma * (1 - dones) * self.critic(next_states)
         critic_loss = advantage.pow(2).sum()
         actor_loss = - logprobs * advantage.detach()
         actor_loss = torch.sum(actor_loss)

@@ -1,22 +1,21 @@
 import gym
 from algo.REINFORCE.networks import MLP
-from model import AC
+from model import A2C, A2C_GAE
 
 ###############################################
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES  = 2000
+NUM_EPISODES  = 100
 NUM_TIMESTEP  = 200
 LEARNING_RATE = 1e-3
-BATCH_SIZE    = 100
 GAMMA = 0.90
 
 
 def main():
     # set up the environment and agent
-    env = gym.make('MountainCar-v0')
-    agent = AC(env, MLP, LEARNING_RATE, GAMMA, BATCH_SIZE)
+    env = gym.make('CartPole-v1')
+    agent = A2C_GAE(env, MLP, LEARNING_RATE, GAMMA, 0.85)
     agent.reset()
 
     for episode in range(NUM_EPISODES):

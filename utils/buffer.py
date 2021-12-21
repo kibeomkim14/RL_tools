@@ -7,7 +7,7 @@ class ExpReplay:
         self.memory = deque([], maxlen=capacity)
         self.record = transition
 
-    def __len__(self):
+    def len(self):
         return len(self.memory)
 
     def store(self, *args):
@@ -16,6 +16,9 @@ class ExpReplay:
 
     def sample(self, batch_size):
         return random.sample(self.memory, batch_size)
+
+    def all(self):
+        return list(self.memory)
 
     def clear(self):
         return self.memory.clear()
