@@ -27,20 +27,20 @@ class AC(Algorithm):
         self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
 
         self.buffer = ExpReplay(10000, self.transition)
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=learning_rate)
+        self.actor_optimizer  = optim.Adam(self.actor.parameters(), lr=learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
     def act(self, state):
         # Here, we assumes the action space is discrete with a limited dimension.
         # given the dimension, network outputs probability of each action and the distribution
         # is formed. Action is then sampled from that distribution
-        x = torch.from_numpy(state.astype(np.float32))  # change to tensor
+        x = torch.tensor(state.astype(np.float32))  # change to tensor
         prob = self.actor.forward(x)
         dist = Categorical(prob)
 
         # action sampled from defined distribution
         action = dist.sample()
-        log_prob = dist.log_prob(action)  # log_prob of pi(a|s)
+        log_prob = dist.log_prob(action)  # log(pi(a|s))
         return action.item(), log_prob
 
     def reset(self):
@@ -62,9 +62,14 @@ class AC(Algorithm):
 
         # calculate loss of policy
         # Below advantage function is the TD estimate of Q(s,a).
-        advantage = rewards + self.gamma * (1 - dones) * self.critic(next_states)
+        Q = rewards + self.gamma * (1 - dones) * self.critic(next_states)
+        advantage = Q - self.critic(states)
         critic_loss = advantage.pow(2).sum()
-        actor_loss = - logprobs * advantage.detach()
+
+        # Although training process is similar to REINFORCE algorithm
+        # in Actor-Critic, return, G is substituted for Q(s,a)
+        # In this code, we calculated TD estimate of Q(s,a)
+        actor_loss = - logprobs * Q.detach()
         actor_loss = torch.sum(actor_loss)
 
         # do gradient ascent
@@ -75,3 +80,17 @@ class AC(Algorithm):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
+
+    def save(self, filename):
+        torch.save(self.critic.state_dict(), filename + "_critic")
+        torch.save(self.critic_optimizer.state_dict(), filename + "_critic_optimizer")
+
+        torch.save(self.actor.state_dict(), filename + "_actor")
+        torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
+
+    def load(self, filename):
+        self.critic.load_state_dict(torch.load(filename + "_critic"))
+        self.critic_optimizer.load_state_dict(torch.load(filename + "_critic_optimizer"))
+
+        self.actor.load_state_dict(torch.load(filename + "_actor"))
+        self.actor_optimizer.load_state_dict(torch.load(filename + "_actor_optimizer"))

@@ -49,6 +49,8 @@ class REINFORCE(Algorithm):
             returns[t] = future_return
 
         # calculate loss of policy
+        # loss of REINFORCE algorithm is
+        # the expectation of Return, G * grad of log pi(a|s) over a distribution pi_theta.
         returns = torch.tensor(returns)
         log_probs = torch.stack(batch.logprobs)
         loss = - log_probs * returns

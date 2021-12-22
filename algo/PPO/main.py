@@ -1,20 +1,24 @@
 import gym
+
 from algo.REINFORCE.networks import MLP
-from model import A2C, A2C_GAE
+from model import PPO
 
 ###############################################
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES  = 100
+NUM_EPISODES  = 200
 NUM_TIMESTEP  = 200
-LEARNING_RATE = 1e-3
-GAMMA = 0.90
+LEARNING_RATE = 1e-4
+GAMMA   = 0.90
+EPSILON = 0.05
+LAMBDA  = 0.999
+
 
 def main():
     # set up the environment and agent
     env = gym.make('CartPole-v1')
-    agent = A2C_GAE(env, MLP, LEARNING_RATE, GAMMA, 0.85)
+    agent = PPO(env, MLP, LEARNING_RATE, GAMMA, LAMBDA, EPSILON)
     agent.reset()
 
     for episode in range(NUM_EPISODES):

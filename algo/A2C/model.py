@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from algo.ActorCritic.model import AC
 
@@ -29,6 +28,9 @@ class A2C(AC):
         advantage = rewards + self.gamma * (1 - dones) * self.critic(next_states) - self.critic(states)
         critic_loss = advantage.pow(2).sum()
 
+        # Unlike Actor-Critic, we instead use advantage Q(s,a) - V(s) for
+        # calculating actor loss. However, we used TD estimate of Q(s,a)
+        # which uses only value function estimate.
         actor_loss = - logprobs * advantage.detach()
         actor_loss = torch.sum(actor_loss)
 
@@ -82,6 +84,9 @@ class A2C_GAE(A2C):
         weighted_adv = torch.cumsum(weighted_adv, dim=0)
         weighted_adv = torch.flip(weighted_adv, dims=[1,0])
 
+        # in this algorithm, we use generalized advantage estimated proposed by
+        # Schulman. we introduced the decay rate lambda to control the estimation of
+        # advantage function for every state s_t.
         gae = weighted_adv * inv_wgt_tensor
         actor_loss = -logprobs * gae.detach()
         actor_loss = torch.sum(actor_loss)
