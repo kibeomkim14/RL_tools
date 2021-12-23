@@ -19,7 +19,11 @@ class AC(Algorithm):
         :param batch_size: specified batch size for training.
         """
         self.dim_in = env.observation_space.shape[0]
-        self.dim_out = env.action_space.n
+        try:
+            self.dim_out = env.action_space.n
+        except:
+            self.dim_out = 0
+
         self.critic = Net(self.dim_in, 1)
         self.actor = Net(self.dim_in, self.dim_out)
 
@@ -27,7 +31,7 @@ class AC(Algorithm):
         self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))
 
         self.buffer = ExpReplay(10000, self.transition)
-        self.actor_optimizer  = optim.Adam(self.actor.parameters(), lr=learning_rate)
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=learning_rate)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
     def act(self, state):
