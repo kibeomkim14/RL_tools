@@ -1,22 +1,24 @@
+from collections import namedtuple
+
 import numpy as np
 import torch
 import torch.optim as optim
-from utils.buffer import ExpReplay
-from collections import namedtuple
 from torch.distributions import Categorical
+
 from utils.Algorithm import Algorithm
+from utils.buffer import ExpReplay
 
 
 class AC(Algorithm):
-    def __init__(self, env, Net, learning_rate, disc_rate):
+    def __init__(self, env, Actor, Critic, learning_rate, disc_rate):
+
         """
         This class implements 1-step Actor-Critic algorithm where one uses two
         deep neural networks, Actor & Critic.
         :param env: openai gym environment.
         :param Net: neural network class from pytorch module.
         :param learning_rate: learning rate of optimizer.
-        :param disc_rate: discount rate used to calculate return G.
-        :param batch_size: specified batch size for training.
+        :param disc_rate: discount rate used to calculate return G
         """
         self.dim_in = env.observation_space.shape[0]
         try:
@@ -24,8 +26,8 @@ class AC(Algorithm):
         except:
             self.dim_out = 0
 
-        self.critic = Net(self.dim_in, 1)
-        self.actor = Net(self.dim_in, self.dim_out)
+        self.critic = Critic(self.dim_in)
+        self.actor = Actor(self.dim_in, self.dim_out)
 
         self.gamma = disc_rate
         self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'next_state', 'dones'))

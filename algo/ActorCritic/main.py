@@ -1,5 +1,5 @@
 import gym
-from algo.REINFORCE.networks import MLP
+from algo.ActorCritic.networks import Actor, Critic
 from model import AC
 import pyglet
 
@@ -7,17 +7,16 @@ import pyglet
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES = 2000
+NUM_EPISODES = 250
 NUM_TIMESTEP = 200
-LEARNING_RATE = 1e-3
-BATCH_SIZE = 100
-GAMMA = 0.90
+LEARNING_RATE = 1e-2
+GAMMA = 0.95
 
 
 def main():
     # set up the environment and agent
-    env = gym.make('MountainCar-v0')
-    agent = AC(env, MLP, LEARNING_RATE, GAMMA, BATCH_SIZE)
+    env = gym.make('CartPole-v0')
+    agent = AC(env, Actor, Critic, LEARNING_RATE, GAMMA)
     agent.reset()
 
     for episode in range(NUM_EPISODES):

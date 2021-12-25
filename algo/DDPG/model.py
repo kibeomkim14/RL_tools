@@ -17,7 +17,7 @@ class DDPG(AC):
 
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
         self.buffer = ExpReplay(10000, self.transition)
-        self.exploration_dist = Normal(torch.tensor([0.0]), self.action_std)
+        self.noise_dist = Normal(torch.tensor([0.0]), self.action_std)
 
         # Unlike AC setting, we view network as action-state value network.
         self.actor = Net(self.dim_in, 1)
@@ -29,7 +29,7 @@ class DDPG(AC):
     def act(self, state):
         x = torch.tensor(state.astype(np.float32))
         action = self.actor.forward(x)
-        return torch.clip(action + self.exploration_dist.sample(), -2.0, 2.0).detach().numpy()
+        return torch.clip(action + self.noise_dist.sample(), -2.0, 2.0).detach().numpy()
 
     def soft_update(self, target, source):
         for target_param, param in zip(list(target.parameters()), list(source.parameters())):
