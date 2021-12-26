@@ -10,7 +10,7 @@ class TD3(DDPG):
     With Value Net and Policy Net defined, we integrate two network to learn value function and
     policy given states respectively.
     """
-    def __init__(self, env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size, update_freq):
+    def __init__(self, env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size, update_freq, update_num):
         super().__init__(env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size)
 
         # introduce another Q-network with its target network and its optimizer.
@@ -19,6 +19,7 @@ class TD3(DDPG):
         self.critic_2_target = deepcopy(self.critic_2)
         self.critic_2_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
+        self.update_num  = update_num
         self.policy_freq = update_freq
         self.update_time = 0
 
@@ -34,39 +35,44 @@ class TD3(DDPG):
         return torch.clip(action + torch.clip(self.noise_dist.sample(), -0.5, 0.5), -2.0, 2.0).detach().numpy()
 
     def train(self):
-        # calculate return of all times in the episode
+        # if number of collected sample is not enough, we do not train the model.
         if self.buffer.len() < self.batch_size:
             return
 
-        transitions = self.buffer.sample(self.batch_size)
-        batch = self.transition(*zip(*transitions))
+        # else, do 'update_num' of updates.
+        for _ in range(self.update_num):
 
-        # extract variables from sampled batch.
-        states = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
-        actions = torch.tensor(batch.action).view(self.batch_size, 1)
-        rewards = torch.tensor(batch.reward).view(self.batch_size, 1)
-        dones = torch.tensor(batch.dones).view(self.batch_size, 1).long()
-        next_states = torch.tensor(batch.next_state).view(self.batch_size, self.dim_in)
-        next_actions = self.actor_target(next_states)
+            transitions = self.buffer.sample(self.batch_size)
+            batch = self.transition(*zip(*transitions))
 
-        # compute target
-        y = rewards + self.gamma * (1 - dones) * self.critic_target(torch.hstack((next_states, next_actions)))
-        advantage = self.critic(torch.hstack([states, actions])) - y.detach()
-        critic_loss = advantage.pow(2).mean()
+            # extract variables from sampled batch.
+            states = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
+            actions = torch.tensor(batch.action).view(self.batch_size, 1)
+            rewards = torch.tensor(batch.reward).view(self.batch_size, 1)
+            dones = torch.tensor(batch.dones).view(self.batch_size, 1).long()
+            next_states = torch.tensor(batch.next_state).view(self.batch_size, self.dim_in)
 
-        # Get actor loss
-        actor_loss = -self.critic(torch.hstack([states, self.actor(states)])).mean()
+            # compute target actions with target network.
+            next_actions = self.actor_target(next_states)
 
-        # Optimize the critic
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
+            # compute target
+            y = rewards + self.gamma * (1 - dones) * self.critic_target(torch.hstack((next_states, next_actions)))
+            advantage = self.critic(torch.hstack([states, actions])) - y.detach()
+            critic_loss = advantage.pow(2).mean()
 
-        # Optimize the actor
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
+            # Get actor loss
+            actor_loss = -self.critic(torch.hstack([states, self.actor(states)])).mean()
 
-        # Update the frozen target models
-        self.soft_update(self.critic_target, self.critic)
-        self.soft_update(self.actor_target, self.actor)
+            # Optimize the critic
+            self.critic_optimizer.zero_grad()
+            critic_loss.backward()
+            self.critic_optimizer.step()
+
+            # Optimize the actor
+            self.actor_optimizer.zero_grad()
+            actor_loss.backward()
+            self.actor_optimizer.step()
+
+            # Update the frozen target models
+            self.soft_update(self.critic_target, self.critic)
+            self.soft_update(self.actor_target, self.actor)
