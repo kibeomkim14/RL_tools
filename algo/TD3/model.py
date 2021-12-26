@@ -40,7 +40,7 @@ class TD3(DDPG):
             return
 
         # else, do 'update_num' of updates.
-        for _ in range(self.update_num):
+        for j in range(self.update_num):
 
             transitions = self.buffer.sample(self.batch_size)
             batch = self.transition(*zip(*transitions))
@@ -68,19 +68,25 @@ class TD3(DDPG):
             critic_loss_1 = advantage_1.pow(2).mean()
             critic_loss_2 = advantage_2.pow(2).mean()
 
-            # Get actor loss
-            actor_loss = -self.critic(torch.hstack([states, self.actor(states)])).mean()
-
             # Optimize the critic
             self.critic_optimizer.zero_grad()
-            critic_loss.backward()
+            critic_loss_1.backward()
             self.critic_optimizer.step()
 
-            # Optimize the actor
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward()
-            self.actor_optimizer.step()
+            self.critic_2_optimizer.zero_grad()
+            critic_loss_2.backward()
+            self.critic_2_optimizer.step()
 
-            # Update the frozen target models
-            self.soft_update(self.critic_target, self.critic)
-            self.soft_update(self.actor_target, self.actor)
+            if j % self.policy_freq == 0:
+                # Get actor loss
+                actor_loss = -self.critic(torch.hstack([states, self.actor(states)])).mean()
+
+                # Update the frozen target models
+                self.soft_update(self.critic_target  , self.critic)
+                self.soft_update(self.critic_2_target, self.critic_2)
+                self.soft_update(self.actor_target, self.actor)
+
+                # Optimize the actor
+                self.actor_optimizer.zero_grad()
+                actor_loss.backward()
+                self.actor_optimizer.step()
