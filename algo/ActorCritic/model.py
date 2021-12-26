@@ -24,7 +24,7 @@ class AC(Algorithm):
         try:
             self.dim_out = env.action_space.n
         except:
-            self.dim_out = 0
+            self.dim_out = 1
 
         self.critic = Critic(self.dim_in)
         self.actor = Actor(self.dim_in, self.dim_out)

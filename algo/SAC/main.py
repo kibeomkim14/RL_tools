@@ -1,6 +1,6 @@
 import gym
 from networks import Actor, Critic
-from model import TD3
+from model import SAC
 
 ###############################################
 ############# Parameter Setting ###############
@@ -17,7 +17,7 @@ BATCH_SIZE = 50
 def main():
     # set up the environment and agent
     env = gym.make('Pendulum-v1')
-    agent = TD3(env, Actor, Critic, LEARNING_RATE, GAMMA, A_VAR, BATCH_SIZE, 3, 10)
+    agent = SAC(env, Actor, Critic, LEARNING_RATE, GAMMA, A_VAR, BATCH_SIZE, 3, 10, 0.3)
     agent.reset()
 
     for episode in range(NUM_EPISODES):
