@@ -62,8 +62,11 @@ class TD3(DDPG):
             Q_target = torch.min([Q_targ_1, Q_targ_2])
 
             y = rewards + self.gamma * (1 - dones) * Q_target
-            advantage = self.critic(torch.hstack([states, actions])) - y.detach()
-            critic_loss = advantage.pow(2).mean()
+            advantage_1 = self.critic(torch.hstack([states, actions]))   - y.detach()
+            advantage_2 = self.critic_2(torch.hstack([states, actions])) - y.detach()
+
+            critic_loss_1 = advantage_1.pow(2).mean()
+            critic_loss_2 = advantage_2.pow(2).mean()
 
             # Get actor loss
             actor_loss = -self.critic(torch.hstack([states, self.actor(states)])).mean()
