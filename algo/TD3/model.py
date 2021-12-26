@@ -54,9 +54,14 @@ class TD3(DDPG):
 
             # compute target actions with target network.
             next_actions = self.actor_target(next_states)
+            next_actions = torch.clip(next_actions + torch.clip(self.noise_dist.sample(), -0.5, 0.5), -2.0, 2.0).detach().numpy()
 
             # compute target
-            y = rewards + self.gamma * (1 - dones) * self.critic_target(torch.hstack((next_states, next_actions)))
+            Q_targ_1 = self.critic_target(torch.hstack((next_states, next_actions)))
+            Q_targ_2 = self.critic_2_target(torch.hstack((next_states, next_actions)))
+            Q_target = torch.min([Q_targ_1, Q_targ_2])
+
+            y = rewards + self.gamma * (1 - dones) * Q_target
             advantage = self.critic(torch.hstack([states, actions])) - y.detach()
             critic_loss = advantage.pow(2).mean()
 
