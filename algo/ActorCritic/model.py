@@ -37,9 +37,13 @@ class AC(Algorithm):
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=learning_rate)
 
     def act(self, state):
-        # Here, we assumes the action space is discrete with a limited dimension.
-        # given the dimension, network outputs probability of each action and the distribution
-        # is formed. Action is then sampled from that distribution
+        """
+        Here, we assume the action space is discrete with a limited dimension.
+        given the dimension, network outputs probability of each action and the distribution
+        is formed. Action is then sampled from that distribution
+        :param state:
+        :return:
+        """
         x = torch.tensor(state.astype(np.float32))  # change to tensor
         prob = self.actor.forward(x)
         dist = Categorical(prob)

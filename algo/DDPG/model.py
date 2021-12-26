@@ -8,25 +8,31 @@ from algo.ActorCritic.model import AC
 
 
 class DDPG(AC):
-    def __init__(self, env, Net, learning_rate, disc_rate, sigma, batch_size):
-        super().__init__(env, Net, learning_rate, disc_rate)
+    def __init__(self, env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size):
+        super().__init__(env, Actor, Critic, learning_rate, disc_rate)
         self.dim_out = 0
         self.batch_size = batch_size
-        self.action_std = torch.tensor([sigma])
         self.tau = 0.05
 
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
         self.buffer = ExpReplay(10000, self.transition)
-        self.noise_dist = Normal(torch.tensor([0.0]), self.action_std)
+        self.noise_dist = Normal(torch.tensor([0.0]), torch.tensor([sigma]))
 
-        # Unlike AC setting, we view network as action-state value network.
-        self.actor = Net(self.dim_in, 1)
-        self.critic = Net(self.dim_in + 1, 1)
-
-        self.actor_target = deepcopy(self.actor)
+        self.actor_target  = deepcopy(self.actor)
         self.critic_target = deepcopy(self.critic)
 
     def act(self, state):
+        """
+        Unlike actor-critic methods, we use policy function to find
+        the deterministic action instead of distributions which is parametrized by
+        distribution parameters learned from the policy.
+
+        Here, state input prompts policy network to output a single or multiple-dim
+        actions.
+        :param state:
+        :return:
+        """
+        # we
         x = torch.tensor(state.astype(np.float32))
         action = self.actor.forward(x)
         return torch.clip(action + self.noise_dist.sample(), -2.0, 2.0).detach().numpy()

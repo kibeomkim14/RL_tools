@@ -1,80 +1,30 @@
-import numpy as np
 import torch
-import torch.nn as nn
+import numpy as np
+from algo.DDPG.model import DDPG
 from copy import deepcopy
-import torch.optim as optim
-from utils.buffer import ExpReplay
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def add_noise(action, noise_std):
-    noise = np.random.normal(0 ,noise_std, len(action))
-    action = action + noise
-
-    if action.min() < 0:
-        action = action + np.abs(action.min())
-    action = action /np.sum(action)
-    return action
-
-
-class TD3(object):
+class TD3(DDPG):
     '''
     With Value Net and Policy Net defined, we integrate two network to learn value function and
     policy given states respectively.
     '''
-    def __init__(self, env, Net, gamma, actor_hidden_dim, critic_hidden_dim,
-                 seq_length, lr_critic = 1e-6, lr_actor = 1e-3, policy_freq = 2,
-                 tau = 0.05, memory_size = 500, batch_size = 50, noise_std =0.2,
-                 noise_clip = 0.5):
-
-        self.env = env
-        self.observ_dim  = env.observation_space.shape[0]
-        self.action_dim  = env.action_space.shape[0]
-        self.seq_len     = seq_length
-        self.gamma       = gamma
-        self.tau         = tau
-
-        self.exp_memory  = ExpReplay(10000)
-        self.memory_size = memory_size
-        self.batch_size  = batch_size
+    def __init__(self, env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size, update_freq):
+        super().__init__(env, Actor, Critic, learning_rate, disc_rate, sigma, batch_size)
+        self.policy_freq = update_freq
         self.update_time = 0
-        self.policy_freq = policy_freq
-        self.noise_std   = noise_std
-        self.noise_clip  = noise_clip
 
-        # Set two separate neural networks and its target network
-        self.critic = Net(self.observ_dim + self.action_dim, critic_hidden_dim)
-        self.actor  = Net(self.observ_dim, actor_hidden_dim, self.action_dim)
-
-        self.critic_target = deepcopy(self.critic)
-        self.actor_target  = deepcopy(self.actor)
-
-        # self.critic_h0, self.critic_c0  = self.critic.init_state('zero')
-        # self.critic_target_h0, self.critic_target_c0  = self.critic_target.init_state('zero')
-
-        self.critic_optimizer = optim.Adam(self.critic.parameters() , lr_critic)
-        self.actor_optimizer  = optim.Adam(self.actor.parameters()  , lr_actor)
-
-    def act(self, state):
-        state  = torch.FloatTensor(state).to(device)
-        action = self.actor(state).detach().numpy()
-        return add_noise(action, self.noise_std)
-
-    def eval_(self, state):
-        state  = torch.FloatTensor(state).to(device)
-        return self.actor(state).detach().numpy()
-
-    def store(self, *args):
-        self.exp_memory.store(*args)
-
-    def reset(self):
-        self.exp_memory.clear()
-
-    def soft_update(self, target, source):
-        for target_param, param in zip(list(target.parameters()), list(source.parameters())):
-            target_param = target_param * (1.0 - self.tau) + param * self.tau
+    def act(self, state)
+        """
+        on top of DDPG act method, we introduce extra clip on
+        noise sampled from distribution. Then the clipped noise is added to action from
+        policy network.
+        :param state:
+        :return:
+        """
+        x = torch.tensor(state.astype(np.float32))
+        action = self.actor.forward(x)
+        return torch.clip(action + torch.clip(self.noise_dist.sample(), -0.5, 0.5), -2.0, 2.0).detach().numpy()
 
     def train(self):
         # take B samples from experience replay memory
