@@ -60,7 +60,7 @@ class DQN(Algorithm):
 
         # calculate loss of policy
         # Below advantage function is the TD estimate of Q(s,a).
-        y = rewards + self.gamma * (1 - dones) * torch.max(self.critic(next_states), 1)[0]
+        y = rewards + self.gamma * (1 - dones) * torch.max(self.QNet(next_states), 1)[0]
         Q = torch.index_select(self.QNet(states), 1, actions)
         loss = (y - Q).pow(2).sum()
 
