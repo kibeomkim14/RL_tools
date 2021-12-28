@@ -6,8 +6,11 @@ class ValueNet(nn.Module):
         super(ValueNet, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(dim_in, 8),
-            nn.Linear(8, dim_out),
+            nn.Linear(dim_in, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, dim_out),
             nn.ReLU()
         )
 

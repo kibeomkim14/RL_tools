@@ -6,10 +6,10 @@ from model import DoubleDQN
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES  = 2000
+NUM_EPISODES  = 500
 NUM_TIMESTEP  = 100
 LEARNING_RATE = 1e-4
-BATCH_SIZE    = 500
+BATCH_SIZE    = 120
 GAMMA         = 0.90
 EPSILON       = 0.05
 TAU           = 0.02
@@ -41,6 +41,7 @@ def main():
             agent.store(state, action, reward, next_state, done)
             env.render()
 
+            state = next_state
             total_reward += reward
             if done:
                 break
@@ -48,7 +49,6 @@ def main():
         if episode % UPDATE_T:
             agent.train()
         solved = total_reward > 195.0
-        agent.reset()
         print(f'Episode {episode}, total_reward: {total_reward}, solved: {solved}')
 
 

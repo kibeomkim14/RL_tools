@@ -6,12 +6,11 @@ from model import DQN
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES = 200
-NUM_TIMESTEP = 100
+NUM_EPISODES = 300
 LEARNING_RATE = 1e-3
-GAMMA = 0.95
-BATCH_SIZE = 150
-EPSILON = 0.25
+GAMMA = 0.9
+BATCH_SIZE = 100
+EPSILON = 0.15
 
 ###############################################
 ############## MODEL TRAINING #################
@@ -28,7 +27,8 @@ def main():
         # reset state
         state = env.reset()
         total_reward = 0
-        for t in range(NUM_TIMESTEP):
+        done = False
+        while not done:
             # take action given state
             action = agent.act(state)
 
@@ -40,12 +40,12 @@ def main():
             env.render()
 
             total_reward += reward
+            state = next_state
             if done:
                 break
 
         agent.train()
         solved = total_reward > 195.0
-        agent.reset()
         print(f'Episode {episode}, total_reward: {total_reward}, solved: {solved}')
 
 

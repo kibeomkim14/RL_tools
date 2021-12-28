@@ -23,7 +23,8 @@ def main():
         # reset state
         state = env.reset()
         total_reward = 0
-        for t in range(NUM_TIMESTEP):
+        done = False
+        while not done:
             # take action given state
             action, logprob = agent.act(state)
 
@@ -34,7 +35,9 @@ def main():
             agent.store(state, action, logprob, reward, next_state, done)
             env.render()
 
+            state = next_state
             total_reward += reward
+
             if done:
                 break
 

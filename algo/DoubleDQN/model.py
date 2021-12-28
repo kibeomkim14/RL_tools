@@ -7,7 +7,7 @@ class DoubleDQN(DQN):
     def __init__(self, env, Net, learning_rate, disc_rate, epsilon, batch_size, tau):
         super().__init__(env, Net, learning_rate, disc_rate, epsilon, batch_size)
         self.QNet_target = deepcopy(self.QNet)
-        self.target_tau = tau
+        self.tau = tau
 
     def soft_update(self, target, source):
         for target_param, param in zip(list(target.parameters()), list(source.parameters())):
@@ -32,11 +32,11 @@ class DoubleDQN(DQN):
 
         # calculate loss of policy
         # Below advantage function is the TD estimate of Q(s,a).
-        next_actions = torch.max(self.QNet_target(next_states), 1)[0]
+        next_actions = torch.max(self.QNet_target(next_states), 1)[1].view(self.batch_size, 1)
 
         # r + gamma Q(s_t+1, argmax_(a_t+1)(Q(s_t+1, a_t+1))
-        y = rewards + self.gamma * (1 - dones) * torch.index_select(self.QNet(states), 1, next_actions)
-        Q = torch.index_select(self.QNet(states), 1, actions) # Q(s_t, a_t)
+        y = rewards + self.gamma * (1 - dones) * self.QNet(states).gather(1, next_actions)
+        Q = self.QNet(states).gather(1, actions) # Q(s_t, a_t)
         loss = (y - Q).pow(2).sum()
 
         # do gradient ascent
@@ -45,7 +45,7 @@ class DoubleDQN(DQN):
         self.optimizer.step()
 
         # Update the frozen target models
-        self.soft_update(self.critic_target, self.critic)
+        self.soft_update(self.QNet_target, self.QNet)
 
     def save(self, filename):
         torch.save(self.QNet.state_dict(), filename + "_DoubleDQN_Q")

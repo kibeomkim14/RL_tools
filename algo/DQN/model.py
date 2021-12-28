@@ -18,8 +18,8 @@ class DQN(Algorithm):
         self.QNet = Net(self.dim_in, self.dim_out)
 
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
-        self.buffer = ExpReplay(10000, self.transition)
-        self.optimizer = optim.Adam(self.QNet.parameters(), lr=learning_rate)
+        self.buffer     = ExpReplay(10000, self.transition)
+        self.optimizer  = optim.Adam(self.QNet.parameters(), lr=learning_rate)
 
         self.gamma      = disc_rate
         self.epsilon    = epsilon
@@ -61,7 +61,7 @@ class DQN(Algorithm):
         # calculate loss of policy
         # Below advantage function is the TD estimate of Q(s,a).
         y = rewards + self.gamma * (1 - dones) * torch.max(self.QNet(next_states), 1)[0]
-        Q = torch.index_select(self.QNet(states), 1, actions)
+        Q = self.QNet(states).gather(1, actions)
         loss = (y - Q).pow(2).sum()
 
         # do gradient ascent
