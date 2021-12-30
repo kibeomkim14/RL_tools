@@ -35,7 +35,7 @@ Markov Decision Process(MDP) is a mathematical framework that describes sequenti
 
 I will introduce variables which will be used in describing MDP process.
 
-* state \\[ s_t \\]
+* state $s_t$
 * action \\( a_t \\)
 * reward \\( r_t \\)
 
