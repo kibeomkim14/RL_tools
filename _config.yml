@@ -4,11 +4,6 @@ date: 2021-12-30 21:39:12 -0000
 categories: DQN RL
 
 
-theme: jekyll-theme-minimal
-title: Reinforcement Learning by Ed Kim
-description: Hi and welcome to my website! I am Edward and I have interest in reinforcement learning and financial markets. My previous work experiences are as an actuary and I am stepping towards Quant space! I hope you get useful information from reading my posts!
-
-
 title: Kib's Reinforcement Learning
 description: > # this means to ignore newlines until "baseurl:"
   Wanna learn about cool AI applications in finance? You are on the right spot.
