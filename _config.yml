@@ -1,4 +1,4 @@
-title: Ed's Reinforcement Learning
+title: Kib's Reinforcement Learning
 description: > # this means to ignore newlines until "baseurl:"
   Write an awesome description for your new site here. You can edit this
   line in _config.yml. It will appear in your document head meta (for
@@ -10,12 +10,12 @@ site-twitter: #if your site has a twitter account, enter it here
 
 # Author Settings
 author: Kibeom Kim # add your name
-author-img: david-freeman.jpg # add your photo
+author-img: kibeom-kim.jpg # add your photo
 about-author: I am Kibeom, an aspiring quant focusing on reinforcement learning, applications on finance.  # add description
 social-twitter: # add your Twitter handle
 social-facebook: # add your Facebook handle
 social-github: kibeomkim14 # add your Github handle
-social-linkedin: https://www.linkedin.com/in/edward-kim-013487113/ # add your Linkedin handle
+social-linkedin: /edward-kim-013487113/ # add your Linkedin handle
 social-email: kkb99705119@gmail.com # add your Email address
 
 # Disqus
