@@ -19,11 +19,11 @@ I write posts about reinforcement learning. You may have heard about the term ma
 I assuming you are already have encountered, studied deeply or pioneered first 2 concepts. Because, these two will be very important building blocks as we study reinforcement learning much much deeper!
 
 
-# So, what is reinforcement learning?
+# What is reinforcement learning?
 
 According to [wikipedia](https://en.wikipedia.org/wiki/Reinforcement_learning), reinforcement learning (RL) is an area of machine learning concerned with how intelligent agents ought to take actions in an environment in order to maximize the notion of cumulative reward. Reinforcement learning is one of three basic machine learning paradigms, alongside supervised learning and unsupervised learning.
 
-Reinforcement learning differs from supervised learning in not needing labelled input/output pairs be presented, and in not needing sub-optimal actions to be explicitly corrected. Instead the focus is on finding a balance between exploration (of uncharted territory) and exploitation (of current knowledge).[1]Partially supervised RL algorithms can combine the advantages of supervised and RL algorithms.
+Reinforcement learning differs from supervised learning in not needing labelled input/output pairs be presented, and in not needing sub-optimal actions to be explicitly corrected. Instead the focus is on finding a balance between exploration (of uncharted territory) and exploitation (of current knowledge). Partially supervised RL algorithms can combine the advantages of supervised and RL algorithms.
 
 The environment is typically stated in the form of a Markov decision process (MDP), because many reinforcement learning algorithms for this context use dynamic programming techniques. The main difference between the classical dynamic programming methods and reinforcement learning algorithms is that the latter do not assume knowledge of an exact mathematical model of the MDP and they target large MDPs where exact methods become infeasible.
 
