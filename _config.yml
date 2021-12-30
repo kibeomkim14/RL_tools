@@ -1,3 +1,9 @@
+layout: post
+title: "DQN"
+date: 2021-12-30 21:39:12 -0000
+categories: DQN RL
+
+
 theme: jekyll-theme-minimal
 title: Ed Kim's RL story
 description: Articles, codes, news about AI, especially RL.
