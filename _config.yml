@@ -1,3 +1,7 @@
 theme: jekyll-theme-minimal
-title: Ed Kim's homepage
+title: Ed Kim's RL story
 description: Articles, codes, news about AI, especially RL.
+
+layout: page
+title: "Implementing DQN from Scratch"
+permalink: /about/algo/DQN
