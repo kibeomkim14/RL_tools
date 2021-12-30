@@ -1,8 +1,12 @@
-## Welcome to GitHub Pages
+## Welcome to my website!!
 
-You can use the [editor on GitHub](https://github.com/kibeomkim14/RL_tools/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Hey, I am Kibeom (Edward) and very pleased to have you in my website!
+This is my first trial on making a website and very excited to have those kind of experiences. This website comes from my repository called [RL-tools](https://jekyllrb.com/) where you can view my python codes using pytorch, starting from SCRATCH!!!
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+I hope you gain some insights viewing my contents, I would wish you to give a few remarks or comments and compliments as you read these contents! Your feedback is really appreciated on making this website much much better. 
+
+I am planning on creating a new post once in every week, mostly dealing with reinforcement learning. Implementations, paper review and more!
+
 
 ### Markdown
 
