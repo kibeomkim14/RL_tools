@@ -5,10 +5,15 @@ This is my first trial on making a website and very excited to have those kind o
 
 I hope you gain some insights viewing my contents, I would wish you to give a few remarks or comments and compliments as you read these contents! Your feedback is really appreciated on making this website much much better. 
 
-I am planning on creating a new post once in every week, mostly dealing with reinforcement learning. Implementations, paper review and more!
+# What is reinforcment learning(RL)? 
+Reinforcement learning is 
 
+# Ok, so what's in store for me?
+That's a great question! In this blog, you can find about contents about theories, implementation details of reinforcment learning algorithms. Every week, I aim to write at least one post about those items. Currently, I wrote these articles which might be helpful to you below:
 
-### Markdown
+[Implemeting DQN from Scratch, PyTorch](https://kibeomkim14.github.io/RL_tools/2021/12/30/DQN.html)
+
+# Do you write codes by yourself?
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
