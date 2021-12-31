@@ -6,7 +6,7 @@ description: What is Reinforcement Learning and why is it useful? You'll find th
 img: software.jpg # Add image post (optional)
 tags: [RLIntro, AlgorithmClass] # add tag
 use_math: true
-comment: true
+comments: true
 ---
 
 Welcome. 
