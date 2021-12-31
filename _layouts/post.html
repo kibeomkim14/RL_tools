@@ -1,7 +1,4 @@
----
-layout: main
-comment: true
----
+
 <article class="article-page">
   <div class="page-content">
     {% if page.img %}
@@ -33,7 +30,6 @@ comment: true
           {% endfor %}
         </div>
       </div>
-      {% include disqus.html %}
       {% if page.comments %}
         <div id="disqus_thread"></div>
         <script>
