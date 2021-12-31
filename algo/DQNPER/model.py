@@ -1,17 +1,15 @@
 import torch
-from copy import deepcopy
-from algo.DQN.model import DQN
+from collections import namedtuple
+from utils.buffer import PrioritizedExpReplay
+from algo.DoubleDQN.model import DoubleDQN
 
 
-class DoubleDQN(DQN):
-    def __init__(self, env, Net, learning_rate, disc_rate, batch_size, tau):
-        super().__init__(env, Net, learning_rate, disc_rate, batch_size)
-        self.QNet_target = deepcopy(self.QNet)
-        self.tau = tau
-
-    def soft_update(self, target, source):
-        for target_param, param in zip(list(target.parameters()), list(source.parameters())):
-            target_param = target_param * (1.0 - self.tau) + param * self.tau
+class DoubleDQN_PER(DoubleDQN):
+    def __init__(self, env, Net, learning_rate, disc_rate, batch_size, tau, alpha):
+        super().__init__(env, Net, learning_rate, disc_rate, batch_size, tau)
+        self.alpha  = alpha
+        self.buffer = PrioritizedExpReplay(40000, self.transition)
+        self.delta  = 0
 
     def train(self):
         # if the number of sample collected is lower than the batch size,
@@ -23,6 +21,7 @@ class DoubleDQN(DQN):
         # calculate return of all times in the episode
         transitions = self.buffer.sample(self.batch_size)
         batch = self.transition(*zip(*transitions))
+        weights = self.buffer.calculate_weight()
 
         states = torch.tensor(batch.state).view(self.batch_size, self.dim_in)
         actions = torch.tensor(batch.action).view(self.batch_size, 1)
@@ -35,9 +34,9 @@ class DoubleDQN(DQN):
         next_actions = torch.max(self.QNet(next_states), 1)[1].view(self.batch_size, 1)
 
         # r + gamma Q(s_t+1, argmax_(a_t+1)(Q(s_t+1, a_t+1))
-        y = rewards + self.gamma * (1 - dones) * self.QNet_target(states).gather(1, next_actions)
-        Q = self.QNet(states).gather(1, actions) # Q(s_t, a_t)
-        loss = (y - Q).pow(2).sum()
+        TD_error = rewards + self.gamma * (1 - dones) * self.QNet_target(states).gather(1, next_actions) - self.QNet(states).gather(1, actions) # Q(s_t, a_t)
+        self.buffer.update_priority(torch.abs(TD_error.detach()))
+        loss = weights * TD_error.detach() * self.QNet(states).gather(1, actions)
 
         # do gradient ascent
         self.optimizer.zero_grad()
@@ -46,14 +45,4 @@ class DoubleDQN(DQN):
 
         # Update the frozen target models
         self.soft_update(self.QNet_target, self.QNet)
-
-    def save(self, filename):
-        torch.save(self.QNet.state_dict(), filename + "_DoubleDQN_Q")
-        torch.save(self.QNet_target.state_dict(), filename + "_DoubleDQN_Q_target")
-        torch.save(self.optimizer.state_dict(), filename + "_DQN_optimizer")
-
-    def load(self, filename):
-        self.QNet.load_state_dict(torch.load(filename + "_DoubleDQN_Q"))
-        self.QNet_target.load_state_dict(torch.load(filename + "_DoubleDQN_Q_target"))
-        self.optimizer.load_state_dict(torch.load(filename + "_DQN_optimizer"))
 
