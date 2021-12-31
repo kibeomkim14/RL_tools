@@ -16,8 +16,10 @@ social-github: kibeomkim14 # add your Github handle
 social-linkedin: /edward-kim-013487113/ # add your Linkedin handle
 social-email: kkb99705119@gmail.com # add your Email address
 
-# Disqus
-discus-identifier: kibeomkim_14 # add your discus identifier
+comments:
+  provider: "disqus" # 블로그 댓글 기능 false (default), "disqus", "discourse", "facebook", "staticman", "staticman_v2", "utterances", "custom"
+  disqus:
+    shortname: "https-kibeomkim14-github-io-rl-tools" 
 
 # Tracker
 analytics: # Google Analytics
