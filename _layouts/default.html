@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 {% include head.html %}
+{% if page.use_math %}
+  {% include mathjax_support.html %}
+{% endif %}
+  
 <body>
 
   <div class="wrapper">
@@ -8,9 +12,5 @@
   </div>
   
   {% include analytics.html %}
-  /* mathjax 추가 */
-  {% if page.use_math %}
-    {% include mathjax_support.html %}
-  {% endif %}
 </body>
 </html>
