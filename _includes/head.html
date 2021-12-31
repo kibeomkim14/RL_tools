@@ -1,7 +1,16 @@
 <head>
 	<meta charset="utf-8">
 	<title>{% if page.title %}{{page.title}} - {{site.title}}{% else %}{{site.title}}{% endif %}</title>
-
+  <!-- for mathjax support -->
+  {% if page.mathjax %}
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+      TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  {% endif %}
+	
   <!-- Edit site and author settings in `_config.yml` to make the social details your own -->
     <meta content="{{ site.title }}" property="og:site_name">
   {% if page.title %}
@@ -41,9 +50,6 @@
     {% for tag in page.tags %}
     <meta content="{{ tag }}" property="article:tag">
     {% endfor %}
-  {% endif %}
-  {% if page.use_math %}
-    {% include mathjax_support.html %}
   {% endif %}
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@{{ site.site-twitter }}">
