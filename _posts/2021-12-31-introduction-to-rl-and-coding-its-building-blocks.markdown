@@ -5,7 +5,7 @@ date: 2021-12-31 00:15:00 +0300
 description: What is Reinforcement Learning and why is it useful? You'll find these details in this post.
 img: software.jpg # Add image post (optional)
 tags: [RLIntro, AlgorithmClass] # add tag
-use_math: true
+mathjax: true
 comments: true
 ---
 
