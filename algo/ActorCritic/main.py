@@ -15,7 +15,7 @@ GAMMA = 0.95
 
 def main():
     # set up the environment and agent
-    env = gym.make('CartPole-v0')
+    env = gym.make('-v0')
     agent = AC(env, Actor, Critic, LEARNING_RATE, GAMMA)
     agent.reset()
 

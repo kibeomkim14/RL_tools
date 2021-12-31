@@ -9,11 +9,12 @@ from model import A2C, A2C_GAE
 NUM_EPISODES  = 100
 NUM_TIMESTEP  = 200
 LEARNING_RATE = 1e-3
-GAMMA = 0.90
+GAMMA = 0.99
+
 
 def main():
     # set up the environment and agent
-    env = gym.make('CartPole-v1')
+    env = gym.make('LunarLander-v2')
     agent = A2C_GAE(env, MLP, LEARNING_RATE, GAMMA, 0.85)
     agent.reset()
 

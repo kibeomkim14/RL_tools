@@ -8,10 +8,9 @@ class ValueNet(nn.Module):
         self.model = nn.Sequential(
             nn.Linear(dim_in, 64),
             nn.ReLU(),
-            nn.Linear(64, 32),
+            nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(32, dim_out),
-            nn.ReLU()
+            nn.Linear(64, dim_out)
         )
 
     def forward(self, x):

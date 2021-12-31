@@ -6,11 +6,14 @@ from model import DQN
 ############# Parameter Setting ###############
 ###############################################
 
-NUM_EPISODES = 300
-LEARNING_RATE = 1e-3
-GAMMA = 0.9
-BATCH_SIZE = 100
-EPSILON = 0.15
+NUM_EPISODES = 1250
+LEARNING_RATE = 1e-4
+GAMMA = 0.99
+BATCH_SIZE = 64
+EPSILON_start = 1
+EPSILON_end = 0.01
+DECAY = 0.999
+UPDATE = 4
 
 ###############################################
 ############## MODEL TRAINING #################
@@ -19,9 +22,13 @@ EPSILON = 0.15
 
 def main():
     # set up the environment and agent
-    env = gym.make('CartPole-v0')
-    agent = DQN(env, ValueNet, LEARNING_RATE, GAMMA, EPSILON, BATCH_SIZE)
+    env = gym.make('LunarLander-v2')
+    env.seed(0)
+    agent = DQN(env, ValueNet, LEARNING_RATE, GAMMA, BATCH_SIZE)
     agent.reset()
+
+    # set epsilon value before the training
+    epsilon = EPSILON_start
 
     for episode in range(NUM_EPISODES):
         # reset state
@@ -30,7 +37,7 @@ def main():
         done = False
         while not done:
             # take action given state
-            action = agent.act(state)
+            action = agent.act(state, epsilon)
 
             # take next step of the environment
             next_state, reward, done, _ = env.step(action)
@@ -43,10 +50,14 @@ def main():
             state = next_state
             if done:
                 break
-
-        agent.train()
         solved = total_reward > 195.0
         print(f'Episode {episode}, total_reward: {total_reward}, solved: {solved}')
+        if episode % UPDATE == 1:
+            agent.train()
+
+        epsilon = max(epsilon * DECAY, EPSILON_end)
+        if episode % 200 == 1:
+            print(epsilon)
 
 
 if __name__ == '__main__':

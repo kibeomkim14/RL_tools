@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from utils.buffer import ExpReplay
 from collections import namedtuple

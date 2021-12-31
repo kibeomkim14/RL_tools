@@ -5,12 +5,12 @@ import torch.nn as nn
 import torch.optim as optim
 
 from utils.Algorithm import Algorithm
-from collections import namedtuple
 from utils.buffer import ExpReplay
+from collections  import namedtuple
 
 
 class DQN(Algorithm):
-    def __init__(self, env, Net, learning_rate, disc_rate, epsilon, batch_size):
+    def __init__(self, env, Net, learning_rate, disc_rate, batch_size):
         self.env = env
         self.dim_in  = self.env.observation_space.shape[0]
         self.dim_out = self.env.action_space.n
@@ -18,16 +18,16 @@ class DQN(Algorithm):
         self.QNet = Net(self.dim_in, self.dim_out)
 
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
-        self.buffer     = ExpReplay(10000, self.transition)
+        self.buffer     = ExpReplay(40000, self.transition)
         self.optimizer  = optim.Adam(self.QNet.parameters(), lr=learning_rate)
 
         self.gamma      = disc_rate
-        self.epsilon    = epsilon
         self.batch_size = batch_size
+        self.loss_function = nn.HuberLoss()
 
-    def act(self, state):
+    def act(self, state, epsilon):
         # select action based on epsilon-greedy policy.
-        if random.random() > self.epsilon:
+        if random.random() > epsilon:
             x = torch.tensor(state.astype(np.float32))  # change to tensor
             Q_values = self.QNet(x)
             action = torch.argmax(Q_values).item() # greedy action

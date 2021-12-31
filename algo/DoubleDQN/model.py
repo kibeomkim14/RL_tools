@@ -4,8 +4,8 @@ from algo.DQN.model import DQN
 
 
 class DoubleDQN(DQN):
-    def __init__(self, env, Net, learning_rate, disc_rate, epsilon, batch_size, tau):
-        super().__init__(env, Net, learning_rate, disc_rate, epsilon, batch_size)
+    def __init__(self, env, Net, learning_rate, disc_rate, batch_size, tau):
+        super().__init__(env, Net, learning_rate, disc_rate, batch_size)
         self.QNet_target = deepcopy(self.QNet)
         self.tau = tau
 
