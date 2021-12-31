@@ -5,7 +5,7 @@ date: 2021-12-31 00:00:00 +0300
 description: We'll go through a basic concept of what Deep Q-Network is and code it from scratch
 img: how-to-start.jpg # Add image post (optional)
 tags: [Programming, DQN, Pytorch, RL] # add tag
-use_math: true
+mathjax: true
 comments: true
 ---
 
