@@ -43,23 +43,6 @@
     <meta content="{{ tag }}" property="article:tag">
     {% endfor %}
   {% endif %}
-  {% if page.mathjax %}
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-    tex2jax: {
-    inlineMath: [ ['$', '$'] ],
-    displayMath: [ ['$$', '$$'] ],
-    processEscapes: true,
-      },
-      TeX: { equationNumbers: {
-      	autoNumber: "AMS" } }
-      }
-     });
-    </script>
-    <script type="text/javascript" async 
-       src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML">
-    </script>
-  {% endif %}
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@{{ site.site-twitter }}">
     <meta name="twitter:creator" content="@{{ site.social-twitter }}">
