@@ -16,7 +16,7 @@ social-github: kibeomkim14 # add your Github handle
 social-linkedin: /edward-kim-013487113/ # add your Linkedin handle
 social-email: kkb99705119@gmail.com # add your Email address
 
-disqus: "https-kibeomkim14-github-io-rl-tools" 
+disqus_shortname: "https-kibeomkim14-github-io-rl-tools" 
 
 # Tracker
 analytics: # Google Analytics
