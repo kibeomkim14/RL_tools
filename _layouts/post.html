@@ -19,7 +19,6 @@ layout: main
         <h1 class="page-title">{{page.title}}</h1>
         <div class="page-date"><span>{{page.date | date: '%Y, %b %d'}}&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
       </header>
-      {% if page.mathjax %}
         <script type="text/x-mathjax-config">
           MathJax.Hub.Config({
                 tex2jax: {
@@ -34,7 +33,6 @@ layout: main
         </script>
         <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-MML-AM_CHTML">
         </script>
-      {% endif %}
       {{content | markdownify}}
       <div class="page-footer">
         <div class="page-share">
