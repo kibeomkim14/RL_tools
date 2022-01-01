@@ -7,6 +7,7 @@ img: how-to-start.jpg # Add image post (optional)
 tags: [Programming, DQN, Pytorch, RL] # add tag
 mathjax: true
 comments: true
+
 ---
 
 In this post, I will write about implementing Deep Q-Network from scratch.
