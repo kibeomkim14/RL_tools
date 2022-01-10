@@ -1,74 +1,85 @@
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import random
-from utils.buffer import DQNMemory
+import numpy as np
+import torch.optim as optim
+from collections import namedtuple
+from utils.buffer import ExpReplay
+from utils.Algorithm import Algorithm
 
 
-gamma = 0.99  # discount rate
+class SARSA(Algorithm):
+    def __init__(self, env, Net, learning_rate, disc_rate, epsilon ,batch_size):
+        self.dim_in  = env.observation_space.shape[0]
+        self.dim_out = env.action_space.n
 
+        self.env  = env
+        self.QNet  = Net(self.dim_in, self.dim_out)
 
-class SARSA(nn.Module):
-    def __init__(self, Env, Net, learning_rate, disc_rate, epsilon):
-        super(SARSA, self).__init__()
-
-        self.env = Env
-        self.dim_in  = Env.observation_space.shape[0]
-        self.dim_out = Env.action_space.n
-        self.valueNet  = Net(self.dim_in, self.dim_out)
-
-        self.gamma  = disc_rate
-        self.buffer = DQNMemory()
-        self.optimizer = optim.Adam(self.valueNet.parameters(), lr=learning_rate)
         self.epsilon = epsilon
+        self.gamma   = disc_rate
+        self.batch_size = batch_size
+        self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
+        self.buffer     = ExpReplay(10000, self.transition)
+        self.optimizer  = optim.Adam(self.QNet.parameters(), lr=learning_rate)
+
+    def act(self, state):
+        # select action based on epsilon-greedy policy.
+        if random.random() > self.epsilon:
+            x = torch.tensor(state.astype(np.float32))  # change to tensor
+            Q_values = self.QNet(x)
+            action = torch.argmax(Q_values).item()  # greedy action
+        else:
+            action = self.env.action_space.sample()  # exploration
+        return action
 
     def reset(self):
         self.buffer.clear()
 
-    def act(self, state):
-        # implements epsilon-greedy policy
-        if random.random() < self.epsilon:
-            return self.env.action_space.sample() # random action between 0 and 1. depends on the environment
-        else:
-            x = torch.from_numpy(state.astype(np.float32))  # change to tensor
-            prob = self.valueNet.forward(x)
-
-        return
-
-    def store(self, state, action, reward, next_state, next_action):
-        """
-        stores the output of environment and agents into agents experience buffer.
-
-        :param next_action:
-        :param next_state:
-        :param reward:
-        :param action:
-        :param state: 
-        :return:
-        """
-        self.buffer.store(state, action, reward, next_state, next_action)
+    def store(self, *args):
+        self.buffer.store(*args)
 
     def train(self):
+        # if the number of sample collected is lower than the batch size,
+        # we do not train the model.
+        if self.buffer.len() < self.batch_size:
+            return
 
+        # else, we begin training.
         # calculate return of all times in the episode
-        reward_list = self.buffer.rewards
-        T = len(reward_list)
-        returns = np.empty(T, dtype=np.float32)
-        future_return = 0.0
+        transitions = self.buffer.sample(self.batch_size)
+        batch = self.transition(*zip(*transitions))
 
-        # calculate returns recursively
-        for t in reversed(range(T)):
-            future_return = reward_list[t] + gamma * future_return
-            returns[t] = future_return
+        states  = torch.tensor(np.array(batch.state)).view(self.batch_size, self.dim_in)
+        actions = torch.tensor(batch.action).view(self.batch_size, 1)
+        rewards = torch.tensor(batch.reward).view(self.batch_size, 1)
+        dones   = torch.tensor(batch.dones).view(self.batch_size, 1).long()
+        next_states = torch.tensor(np.array(batch.next_state)).view(self.batch_size, self.dim_in)
+
+        # We obtain next_actions by inputting next_states in our Q network.
+        # But with no_grad enabled since we only need auto grad on for Q function
+        with torch.no_grad():
+            if random.random() > self.epsilon:  # epsilon greedy
+                Q_values = self.QNet(next_states)
+                next_actions = torch.argmax(Q_values, dim=1)
+            else:
+                next_actions = torch.tensor([self.env.action_space.sample() for _ in range(self.batch_size)])
+            next_actions = next_actions.view(self.batch_size, 1)
 
         # calculate loss of policy
-        returns = torch.tensor(returns)
-        log_probs = torch.stack(self.buffer.logprobs)
-        loss = - log_probs * returns
-        loss = torch.sum(loss)
+        # Below advantage function is the TD estimate of Q(s,a).
+        y = rewards + self.gamma * (1 - dones) * self.QNet(next_states).gather(1, next_actions)
+        Q = self.QNet(states).gather(1, actions)
+        loss = (y - Q).pow(2).mean()
 
         # do gradient ascent
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+    def save(self, filename):
+        torch.save(self.QNet.state_dict(), filename + "_SARSA_Q")
+        torch.save(self.optimizer.state_dict(), filename + "_SARSA_optimizer")
+
+    def load(self, filename):
+        self.QNet.load_state_dict(torch.load(filename + "_SARSA_Q"))
+        self.optimizer.load_state_dict(torch.load(filename + "_SARSA_optimizer"))
