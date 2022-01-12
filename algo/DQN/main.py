@@ -22,7 +22,7 @@ UPDATE = 4
 
 def main():
     # set up the environment and agent
-    env = gym.make('LunarLander-v2')
+    env = gym.make('CartPole-v1')
     env.seed(0)
     agent = DQN(env, ValueNet, LEARNING_RATE, GAMMA, BATCH_SIZE)
     agent.reset()
@@ -56,8 +56,8 @@ def main():
             agent.train()
 
         epsilon = max(epsilon * DECAY, EPSILON_end)
-        if episode % 200 == 1:
-            print(epsilon)
+        #if episode % 200 == 1:
+            #print(epsilon)
 
 
 if __name__ == '__main__':
