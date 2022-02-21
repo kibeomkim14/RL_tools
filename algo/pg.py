@@ -1,20 +1,17 @@
 import numpy as np
 import torch
 import torch.optim as optim
-from utils.buffer import ExpReplay
+from algo.utils import base, buffer
 from collections import namedtuple
 from torch.distributions import Categorical
-from utils.Algorithm import Algorithm
 
 
-class REINFORCE(Algorithm):
-    def __init__(self, env, Net, learning_rate, disc_rate):
-        self.dim_in  = env.observation_space.shape[0]
-        self.dim_out = env.action_space.n
-        self.policy  = Net(self.dim_in, self.dim_out)
+class REINFORCE(base.Algorithm):
+    def __init__(self, env, Net, learning_rate, disc_rate, **net_kwargs):
+        self.policy  = Net(**net_kwargs)
         self.gamma   = disc_rate
         self.transition = namedtuple('Transition', ('state', 'action', 'logprobs', 'reward', 'dones'))
-        self.buffer = ExpReplay(10000, self.transition)
+        self.buffer = buffer.ExpReplay(10000, self.transition)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
 
     def reset(self):
@@ -32,7 +29,7 @@ class REINFORCE(Algorithm):
     def store(self, *args):
         self.buffer.store(*args)
 
-    def train(self):
+    def update(self):
         transitions = self.buffer.sample(self.buffer.__len__())
         batch = self.transition(*zip(*transitions))
         reward_list = batch.reward

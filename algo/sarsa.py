@@ -3,11 +3,10 @@ import random
 import numpy as np
 import torch.optim as optim
 from collections import namedtuple
-from utils.buffer import ExpReplay
-from utils.Algorithm import Algorithm
+from algo.utils import buffer, base
 
 
-class SARSA(Algorithm):
+class SARSA(base.Algorithm):
     def __init__(self, env, Net, learning_rate, disc_rate, epsilon ,batch_size):
         self.dim_in  = env.observation_space.shape[0]
         self.dim_out = env.action_space.n
@@ -19,7 +18,7 @@ class SARSA(Algorithm):
         self.gamma   = disc_rate
         self.batch_size = batch_size
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
-        self.buffer     = ExpReplay(10000, self.transition)
+        self.buffer     = buffer.ExpReplay(10000, self.transition)
         self.optimizer  = optim.Adam(self.QNet.parameters(), lr=learning_rate)
 
     def act(self, state):

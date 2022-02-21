@@ -28,5 +28,5 @@ class Algorithm(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def train(self):
+    def update(self):
         pass
