@@ -5,8 +5,9 @@ import torch
 from gym import envs
 from algo.ac import *
 from algo.ddpg import *
-from algo.pg import *
-from algo.valuebased import *
+from algo.policy_based import *
+from algo.value_based import *
+from algo.utils.utils import NetkwargAction
 from network.networks import *
 
 ###############################################
@@ -24,22 +25,26 @@ networks = {'mlp':MLP, 'cnn':CNN}
 if __name__ == '__main__':
     # initialize ArgumentParser class of argparse 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--env"   , help="Environment", default="MountainCar-v0", type=str, choices=environments)
-    parser.add_argument("--agent" , help="RL agent", default="DQN", type=str, choices=agents)
-    parser.add_argument("--net"   , help="type of network", default='MLP', type=str)
+    parser.add_argument("--env"   , help="Environment", default="CartPole-v1", type=str, choices=environments)
+    parser.add_argument("--agent" , help="RL agent", default="dqn", type=str, choices=agents)
+    parser.add_argument("--net"   , help="type of network", default='mlp', type=str)
     parser.add_argument("--gamma" , help="discount rate", default=0.99, type=float)
     parser.add_argument("--epsilon", help="exploration coeff", default=0.05, type=float)
     parser.add_argument("--n_episode", help="number of episodes", default=100, type=int)
+    parser.add_argument("--batch_size", help="batch size for update", default=100, type=int)
     parser.add_argument("--n_maxstep", help="maximum steps per episode", default=500, type=int)
     parser.add_argument("--learning_rate", help="learning rate", default=1e-3, type=float)
-    parser.add_argument("--netkwargs", nargs='+'), 
+    parser.add_argument("--netkwargs", help="network keyword arguments" ,nargs='*', action=NetkwargAction)
 
     # read the arguments from the command line
     args = parser.parse_args()
-    print(args.netkwargs)
+
     # set up the environment and agent
     env = gym.make(args.env)
-    agent = agents[args.agent](env, args.net , args.learning_rate, args.gamma, args.netkwargs)
+    net = networks[args.net]
+    agent = agents[args.agent](env, net, args.learning_rate, args.epsilon ,args.gamma, args.batch_size, **args.netkwargs)
+
+    batch_reward_average = 0
 
     for episode in range(args.n_episode):
         # reset state
@@ -48,25 +53,32 @@ if __name__ == '__main__':
 
         for t in range(args.n_maxstep):
             # take action given state
-            action, logprob = agent.act(state)
+            action = agent.act(state)
 
             # take next step of the environment
-            state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = env.step(action)
 
             # record interaction between environment and the agent
-            agent.store(state, action, logprob, reward, done)
+            agent.store(state, action, reward, next_state, done)
             env.render()
             total_reward += reward
+            state = next_state
 
             if done:
                 break
 
-        agent.train()
-        solved = total_reward > 195.0
-        if solved:
-            print(f'solved!! (at episode {episode}, reward {total_reward}')
-            break
-        agent.reset()
-        print(f'Episode {episode}, total_reward: {total_reward}, solved: {solved}')
+        agent.update()
+        batch_reward_average += total_reward
+        total_reward = 0
+        
+        if episode % 100 == 0:
+            batch_reward_average = batch_reward_average/100
+            solved = batch_reward_average > 195.0
+            print(f'Episode Batch {episode//100}, total_reward: {batch_reward_average}, solved: {solved}')
+            
+            if solved:
+                print(f'solved!! at Episode Batch {episode//100}, total_reward: {batch_reward_average}')
+                break
+            batch_reward_average = 0
 
 

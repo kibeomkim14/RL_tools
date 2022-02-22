@@ -10,14 +10,14 @@ from collections  import namedtuple
 
 
 class DQN(base.Algorithm):
-    def __init__(self, env, Net, learning_rate, disc_rate, batch_size, **kwargs):
+    def __init__(self, env, Net, epsilon, learning_rate, disc_rate, batch_size, **kwargs):
         self.env  = env
         self.QNet = Net(**kwargs)
 
         self.dim_in  = self.env.observation_space.shape[0]
         self.dim_out = self.env.action_space.n
 
-
+        self.epsilon = epsilon
         self.transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'dones'))
         self.buffer     = buffer.ExpReplay(40000, self.transition)
         self.optimizer  = optim.Adam(self.QNet.parameters(), lr=learning_rate)
@@ -26,15 +26,14 @@ class DQN(base.Algorithm):
         self.batch_size = batch_size
         self.loss_function = nn.HuberLoss()
 
-    def act(self, state, epsilon):
+    def act(self, state):
         # select action based on epsilon-greedy policy.
-        if random.random() > epsilon:
+        if random.random() > self.epsilon:
             x = torch.tensor(state.astype(np.float32))  # change to tensor
             Q_values = self.QNet(x)
             action = torch.argmax(Q_values).item() # greedy action
         else:
             action = self.env.action_space.sample() # exploration
-        assert action.size(0) == self.dim_out, 'dimension of action is not equal to action space requirements.' 
         return action
 
     def reset(self):

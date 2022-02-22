@@ -4,13 +4,16 @@ import torch.nn as nn
 class MLP(nn.Module):
     def __init__(self, dim_in, dim_hidden, dim_out):
         super(MLP, self).__init__()
+        self.dim_in = dim_in
+        self.dim_hidden = dim_hidden
+        self.dim_out = dim_out
 
         self.model = nn.Sequential(
-            nn.Linear(dim_in, dim_hidden),
-            nn.ReLU(),
-            nn.Linear(dim_hidden, dim_out),
-            nn.ReLU()
-        )
+                            nn.Linear(self.dim_in, self.dim_hidden),
+                            nn.ReLU(),
+                            nn.Linear(self.dim_hidden, self.dim_out),
+                            nn.ReLU()
+                            )
 
     def forward(self, x):
         return self.model(x)
